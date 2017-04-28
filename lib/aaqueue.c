@@ -2,12 +2,8 @@
 #include <ucontext.h>
 
 #include "aathread-internal.h"
+#include "aaslist.h"
 #include "aaqueue.h"
-
-struct aaslist {
-	struct aathread *thread;
-	struct aaslist *next;
-};
 
 struct aaqueue {
 	struct aaslist *head;
@@ -41,8 +37,8 @@ struct aathread *aaqueue_get_thread_by_id(struct aaqueue *queue, int tid) {
 	return NULL;
 }
 
-int aaqueue_push_tail(struct aaqueue *queue, struct aathread *thread) { /* returns new TID */
-	struct aaslist *node, *last_node = NULL, *new_node;
+int get_top_tid(struct aaqueue *queue) {
+	struct aaslist *node;
 	int top_tid = -1;
 
 	if (queue == NULL)
@@ -51,23 +47,29 @@ int aaqueue_push_tail(struct aaqueue *queue, struct aathread *thread) { /* retur
 	for (node = queue->head; node != NULL; node = node->next) {
 		if (node->thread->tid > top_tid)
 			top_tid = node->thread->tid;
-		last_node = node;
 	}
+
+	return top_tid;
+}
+
+void aaqueue_push_tail(struct aaqueue *queue, struct aathread *thread) {
+	struct aaslist *new_node;
+
+	if (queue == NULL)
+		return;
 
 	new_node = malloc(sizeof(struct aaslist));
 	new_node->thread = thread;
 	new_node->next = NULL;
 	
-	if (last_node == NULL) { /* empty queue */
+	if (queue->head == NULL) { /* empty queue */
 		queue->head = new_node;
 	} else {
-		last_node->next = new_node;
+		queue->tail->next = new_node;
 	}
 
 	queue->tail = new_node;
 	++queue->length;
-	
-	return top_tid + 1;
 }
 
 struct aathread *aaqueue_pop_head(struct aaqueue *queue) {

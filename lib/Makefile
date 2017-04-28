@@ -1,4 +1,4 @@
-SOURCES := aathread.c aascheduler.c aaqueue.c
+SOURCES := aathread.c aascheduler.c aaqueue.c aamutex.c
 TARGET := libaathread.a
 OBJS := $(SOURCES:.c=.o)
 

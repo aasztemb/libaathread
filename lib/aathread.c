@@ -5,6 +5,7 @@
 #include "aathread-internal.h"
 #include "aaqueue.h"
 #include "aascheduler.h"
+#include "aamutex.h"
 #include "aathread.h"
 
 #define AA_THREAD_STACK_SIZE 32768
@@ -21,7 +22,8 @@ void aathread_init(void) {
 	getcontext(&thread->context);
 	thread->start_routine = NULL;
 	thread->arg = NULL;
-	thread->tid = aaqueue_push_tail(runnable_queue, thread);
+	thread->tid = 0;
+	aaqueue_push_tail(runnable_queue, thread);
 	schedule_timer();
 }
 
@@ -40,8 +42,15 @@ static void start_routine_wrapper(int tid) {
 	aathread_exit();
 }
 
+static int get_top_active_tid(void) {
+	int top_runnable_tid, top_blocked_tid;
+	top_runnable_tid = get_top_tid(runnable_queue);
+	top_blocked_tid = get_top_blocked_tid();
+
+	return top_runnable_tid > top_blocked_tid ? top_runnable_tid : top_blocked_tid;
+}
+
 int aathread_start(void (*start_routine)(void *), void *arg) {
-	int tid;
 	struct aathread *new_thread = malloc(sizeof(struct aathread)),
 		*current_thread = aaqueue_get_head(runnable_queue);
 	sigset_t sigmask;
@@ -54,12 +63,12 @@ int aathread_start(void (*start_routine)(void *), void *arg) {
 	new_thread->start_routine = start_routine;
 	new_thread->arg = arg;
 	disable_signals(&sigmask);
-	tid = aaqueue_push_tail(runnable_queue, new_thread);
-	new_thread->tid = tid;
-	makecontext(&new_thread->context, (void (*)(void))start_routine_wrapper, 2, tid);
+	new_thread->tid = get_top_active_tid() + 1;
+	aaqueue_push_tail(runnable_queue, new_thread);
+	makecontext(&new_thread->context, (void (*)(void))start_routine_wrapper, 2, new_thread->tid);
 	enable_signals(&sigmask);
 
-	return tid;
+	return new_thread->tid;
 }
 
 /* exiting / killing main (0) thread results in program termination */

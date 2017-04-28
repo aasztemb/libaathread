@@ -79,7 +79,7 @@ void reshedule(struct aathread *previous_thread) {
 	
 	if (new_thread == NULL)
 		return;
-	
+
 	if (previous_thread == NULL)
 		setcontext(&new_thread->context);
 	else

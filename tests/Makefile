@@ -1,4 +1,4 @@
-SOURCES := three-threads.c
+SOURCES := three-threads.c blocking-threads.c
 TARGET := $(SOURCES:.c=)
 #OBJS := $(SOURCES:.c=.o)
 
