@@ -1,5 +1,8 @@
 C threading library based on userland context switching
 
+lib/aathread.h is the library header, testcases in tests/ directory are
+intended to demonstrate its functions.
+
 Possible problems are described here:
 
 https://www.gnu.org/software/libc/manual/html_node/System-V-contexts.html
