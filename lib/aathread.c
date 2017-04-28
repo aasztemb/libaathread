@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/mman.h>
 #include <ucontext.h>
 
 #include "aathread-internal.h"
@@ -46,7 +47,8 @@ int aathread_start(void (*start_routine)(void *), void *arg) {
 	sigset_t sigmask;
 
 	getcontext(&new_thread->context);
-	new_thread->context.uc_stack.ss_sp = malloc(AA_THREAD_STACK_SIZE);
+	new_thread->context.uc_stack.ss_sp = mmap(NULL, AA_THREAD_STACK_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE,
+						  MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
 	new_thread->context.uc_stack.ss_size = AA_THREAD_STACK_SIZE;
 	new_thread->context.uc_link = &current_thread->context;
 	new_thread->start_routine = start_routine;
@@ -74,8 +76,10 @@ static void end_thread(struct aathread *thread) {
 void dispose_threads(void) {
 	struct aathread *thread;
 	
-	while ((thread = aaqueue_pop_head(disposal_queue)) != NULL)
+	while ((thread = aaqueue_pop_head(disposal_queue)) != NULL) {
+		munmap(thread->context.uc_stack.ss_sp, AA_THREAD_STACK_SIZE);
 		free(thread);
+	}
 }
 
 void aathread_exit(void) {
