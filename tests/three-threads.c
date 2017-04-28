@@ -10,8 +10,8 @@
 
 int alive_threads = THREADS_COUNT;
 
-void two(void *unused);
-void three(void *unused);
+void two(void *sleep_time);
+void three(void *sleep_time);
 
 void sleep_through_signals(unsigned int seconds) {
 	struct timespec to_sleep;
@@ -26,46 +26,47 @@ void sleep_through_signals(unsigned int seconds) {
 int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
 	int i;
 	time_t now;
-	void (*thread_funcs[THREADS_COUNT])(void *unused) = {NULL, two, three};
+	void (*thread_funcs[THREADS_COUNT])(void *) = { NULL, two, three };
+	int sleep_times[THREADS_COUNT] = { 1, 2, 3 };
 	
 	fprintf(stderr, "One incarnation.\n");
 	aathread_init();
 
 	for (i = 1; i < THREADS_COUNT; ++i) {
-		aathread_start(thread_funcs[i], NULL);
+		aathread_start(thread_funcs[i], &sleep_times[i]);
 	}
 	
 	while (alive_threads > 1) {
 		time(&now);
 		fprintf(stderr, "One: %s", ctime(&now));
-		sleep_through_signals(1);
+		sleep_through_signals(sleep_times[0]);
 	}
 
 	aathread_finish();
 	return 0;
 }
 
-void two(void *unused __attribute__((unused))) {
+void two(void *sleep_time) {
 	int i;
 	time_t now;
 
 	for (i = 0; i < 8; ++i) {
 		time(&now);
 		fprintf(stderr, "Two: %s", ctime(&now));
-		sleep_through_signals(2);
+		sleep_through_signals(*(int *)sleep_time);
 	}
 	--alive_threads;
 	fprintf(stderr, "Two dying. alive_threads: %d\n", alive_threads);
 }
 
-void three(void *unused __attribute__((unused))) {
+void three(void *sleep_time) {
 	int i;
 	time_t now;
 
 	for (i = 0; i < 4; ++i) {
 		time(&now);
 		fprintf(stderr, "Three: %s", ctime(&now));
-		sleep_through_signals(3);
+		sleep_through_signals(*(int *)sleep_time);
 	}
 	--alive_threads;
 	fprintf(stderr, "Three dying. alive_threads: %d\n", alive_threads);
