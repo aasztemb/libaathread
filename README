@@ -1,0 +1,10 @@
+C threading library based on userland context switching
+
+Possible problems are described here:
+
+https://www.gnu.org/software/libc/manual/html_node/System-V-contexts.html
+
+"It is not recommended to do the context switching from the signal
+ handler directly since leaving the signal handler via setcontext if
+ the signal was delivered during code that was not asynchronous signal
+ safe could lead to problems."
