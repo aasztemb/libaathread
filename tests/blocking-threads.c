@@ -71,11 +71,11 @@ void block_on_a(void *sleep_time) {
 		aamutex_lock(mutex_a);
 		time(&now);
 		fprintf(stderr, "%d locked mutex: %s", mynum, ctime(&now));
-		sleep_through_signals(1);
+		sleep_through_signals(mynum);
 		aamutex_unlock(mutex_a);
 		time(&now);
 		fprintf(stderr, "%d released mutex: %s", mynum, ctime(&now));
-		sleep_through_signals(mynum);
+		sleep_through_signals(1);
 	}
 	--alive_threads;
 	fprintf(stderr, "%d dying. alive_threads: %d\n", mynum, alive_threads);
@@ -91,11 +91,11 @@ void block_on_b(void *sleep_time) {
 		aamutex_lock(mutex_b);
 		time(&now);
 		fprintf(stderr, "%d locked mutex: %s", mynum, ctime(&now));
-		sleep_through_signals(1);
+		sleep_through_signals(mynum);
 		aamutex_unlock(mutex_b);
 		time(&now);
 		fprintf(stderr, "%d released mutex: %s", mynum, ctime(&now));
-		sleep_through_signals(mynum);
+		sleep_through_signals(1);
 	}
 	--alive_threads;
 	fprintf(stderr, "%d dying. alive_threads: %d\n", mynum, alive_threads);
