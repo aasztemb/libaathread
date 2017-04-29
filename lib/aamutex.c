@@ -78,7 +78,8 @@ void aamutex_destroy(int mid) {
 
 	enable_signals(&oldmask);
 
-	free(node->mutex); /* TODO: unblock threads in the queue */
+	aaqueue_destroy(node->mutex->blocked_queue); /* TODO: unblock threads in the queue */
+	free(node->mutex);
 	free(node);
 }
 
